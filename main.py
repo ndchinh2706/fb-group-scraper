@@ -20,9 +20,14 @@ def start(url):
     '''
     scraper_instance = Scraper()
 
+    # Get article HTML data
     articles_html = scraper_instance.fetch_html(url)
 
-    print(articles_html)
+    # Parse HTML into a structured object
+    articles = scraper_instance.parse_article_html(articles_html)
+
+    print(articles)
+
 
 if __name__ == '__main__':
     URL = 'https://www.facebook.com/profile.php?id=100077086791019'
