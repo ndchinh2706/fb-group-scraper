@@ -4,34 +4,54 @@ Module where main logic is executed, everything since gathering the data
 to storing it to notifying the final user
 '''
 
+from database import db, Article, Image
+from notifier import Notifier
 from scraper import Scraper, ArticleParser
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.firefox import GeckoDriverManager
 
 
-
-def start(url):
+class Main:
     '''
-    Starts the web scraping process, by fetching posts, parsing, storing and notifying
+    Main class that starts the program execution
     '''
-    scraper_instance = Scraper()
 
-    # Get article HTML data
-    articles_html = scraper_instance.fetch_html(url)
+    def __init__(self, url, ntfy_instance, ntfy_token):
+        self.url = url
+        self.ntfy_instance = ntfy_instance
+        self.ntfy_token = ntfy_token
 
-    # Parse HTML into a structured object
-    parser = ArticleParser()
-    articles = parser.parse_article_html(articles_html)
+        # Start db instance
+        self.service = db.get_session()
 
-    print(articles)
+    def start(self):
+        '''
+        Starts the web scraping process, by fetching posts, parsing, storing and notifying
+        '''
+        scraper_instance = Scraper()
+
+        # Get article HTML data
+        articles_html = scraper_instance.fetch_html(self.url)
+
+        # Parse HTML into a structured object
+        parser = ArticleParser()
+        articles = parser.parse_article_html(articles_html)
+
+        # Check if any of the articles is in the database
+        # this will tell us if it has been "seen" or its new
+        unsaved_articles = db.get_unsaved_articles(articles)
+
+        # Send article notifications
+        notifier = Notifier(self.ntfy_instance, self.ntfy_token)
+        for article in unsaved_articles:
+            notifier.send_article_notification(article)
+
+        print(articles)
 
 
 if __name__ == '__main__':
     URL = 'https://www.facebook.com/profile.php?id=100077086791019'
+    NTFY_INSTANCE = 'https://ntfy.rohjans.com/psp-setubal'
+    NTFY_TOKEN = 'tk_gxktwesoj2lynjo8hjz5bfa1jga5k'
     # URL = ''
 
-    start(URL)
+    main = Main(URL, NTFY_INSTANCE, NTFY_TOKEN)
+    main.start()

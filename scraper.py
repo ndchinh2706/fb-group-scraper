@@ -6,6 +6,7 @@ Provides all the utils to scrape the data
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -171,6 +172,7 @@ class ArticleParser:
 
     def extract_article_details(self, article):
         '''Extracts details from a single article element.'''
+
         parsed_article = {}
         try:
             # Attempt to expand hidden text if necessary
@@ -181,6 +183,8 @@ class ArticleParser:
 
             # Extract images
             parsed_article['images'] = self.extract_images(article)
+
+            time.sleep(15)
 
         except Exception as e:
             print(f"Error parsing article: {e}")
