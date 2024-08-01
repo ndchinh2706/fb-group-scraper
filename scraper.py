@@ -25,55 +25,27 @@ class Scraper:
 
         self.driver = webdriver.Firefox(service=service, options=options)
 
-    def bypass_cookie_dialog(self):
-        '''
-        Check if there is a popup to accept the cookies
-        if so, we press the decline optional cookies
-        '''
+    def find_element(self, by, value, optional=False):
+        """
+        Utility method to find an element; handles absence based on 'optional' flag.
+        """
+        try:
+            return self.driver.find_element(by, value)
+        except Exception:
+            if not optional:
+                raise
+            return None
 
-        dialogs = self.driver.find_elements(By.CSS_SELECTOR, 'div[role="dialog"]')
+    def click_if_present(self, by, value):
+        """Attempts to click an element if it's present."""
+        element = self.find_element(by, value, optional=True)
+        if element:
+            element.click()
 
-        found = False
-        for dialog in dialogs: # There may be more than one dialog
-
-            try:
-                button = dialog.find_element(By.CSS_SELECTOR,
-                    'div[aria-label="Decline optional cookies"]')
-
-                if button:
-                    found = True
-                    button.click()
-                    break
-            except Exception:
-                pass # Button isn't in this dialog
-
-        if not found and len(dialogs) > 0:
-            raise Exception("Could not find a \"Decline Cookies\" button in the cookies popup.")
-
-    def bypass_login_dialog(self):
-        '''
-        Check if there is a popup to login
-        if so, we press the X icon at the top right corner
-        '''
-
-        dialogs = self.driver.find_elements(By.CSS_SELECTOR, 'div[role="dialog"]')
-
-        found = False
-        for dialog in dialogs: # There may be more than one dialog
-
-            try:
-                button = dialog.find_element(By.CSS_SELECTOR,
-                    'div[aria-label="Close"] i')
-
-                if button:
-                    found = True
-                    button.click()
-                    break
-            except Exception:
-                pass # Button isn't in this dialog
-
-        if not found and len(dialogs) > 0:
-            raise Exception("Could not find a close button in the login popup.")
+    def bypass_dialogs(self):
+        """Bypass any pop-up dialogs such as cookies and login prompts."""
+        self.click_if_present(By.CSS_SELECTOR, 'div[aria-label="Decline optional cookies"]')
+        self.click_if_present(By.CSS_SELECTOR, 'div[aria-label="Close"] i')
 
     def fetch_articles(self):
         '''
@@ -82,6 +54,8 @@ class Scraper:
         and find what we want through its parents
         '''
 
+        WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(
+            (By.CSS_SELECTOR, 'div[role="main"]')))
         main_container = self.driver.find_element(By.CSS_SELECTOR, 'div[role="main"]')
 
         if not main_container:
@@ -134,7 +108,7 @@ class Scraper:
 
         return clean_articles
 
-    def scroll_page(self, pixels):
+    def scroll_page(self, pixels = 1000):
         '''
         Scrolls the page until a specific height in pixels
         '''
@@ -148,13 +122,9 @@ class Scraper:
         This can cause problems when trying to click elements that
         this thing is obscuring
         '''
-
-        auth_prompt = self.driver.find_element(By.CSS_SELECTOR, 'div[data-nosnippet=""]')
-
         self.driver.execute_script("""
-            var element = arguments[0];
-            element.parentNode.removeChild(element);
-            """, auth_prompt)
+            Array.from(document.querySelectorAll('div[data-nosnippet]')).forEach(el => el.remove());
+            """)
 
     def fetch_html(self, url):
         '''
@@ -162,17 +132,14 @@ class Scraper:
         '''
         self.driver.get(url)
 
-        # Bypass cookies dialog if it is displayed
-        self.bypass_cookie_dialog()
-
-        # Close page login dialog
-        self.bypass_login_dialog()
+        # Bypass cookies and login dialogs
+        self.bypass_dialogs()
 
         # Remove auth prompt
         self.remove_login_annoynace()
 
         # Scroll the page to load the articles
-        self.scroll_page(1000)
+        self.scroll_page()
 
         # Wait for posts to load
         time.sleep(5)
