@@ -4,7 +4,7 @@ Module where main logic is executed, everything since gathering the data
 to storing it to notifying the final user
 '''
 
-from scraper import Scraper
+from scraper import Scraper, ArticleParser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
@@ -24,7 +24,8 @@ def start(url):
     articles_html = scraper_instance.fetch_html(url)
 
     # Parse HTML into a structured object
-    articles = scraper_instance.parse_article_html(articles_html)
+    parser = ArticleParser()
+    articles = parser.parse_article_html(articles_html)
 
     print(articles)
 

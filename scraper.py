@@ -26,9 +26,9 @@ class Scraper:
         self.driver = webdriver.Firefox(service=service, options=options)
 
     def find_element(self, by, value, optional=False):
-        """
+        '''
         Utility method to find an element; handles absence based on 'optional' flag.
-        """
+        '''
         try:
             return self.driver.find_element(by, value)
         except Exception:
@@ -37,13 +37,13 @@ class Scraper:
             return None
 
     def click_if_present(self, by, value):
-        """Attempts to click an element if it's present."""
+        '''Attempts to click an element if it's present.'''
         element = self.find_element(by, value, optional=True)
         if element:
             element.click()
 
     def bypass_dialogs(self):
-        """Bypass any pop-up dialogs such as cookies and login prompts."""
+        '''Bypass any pop-up dialogs such as cookies and login prompts.'''
         self.click_if_present(By.CSS_SELECTOR, 'div[aria-label="Decline optional cookies"]')
         self.click_if_present(By.CSS_SELECTOR, 'div[aria-label="Close"] i')
 
@@ -122,9 +122,9 @@ class Scraper:
         This can cause problems when trying to click elements that
         this thing is obscuring
         '''
-        self.driver.execute_script("""
+        self.driver.execute_script('''
             Array.from(document.querySelectorAll('div[data-nosnippet]')).forEach(el => el.remove());
-            """)
+            ''')
 
     def fetch_html(self, url):
         '''
@@ -147,63 +147,83 @@ class Scraper:
         # Fetch a clean article list
         return self.fetch_articles()
 
+class ArticleParser:
+    '''
+    Handles parsing of HTML elements to extract article data.
+    '''
+
     def parse_article_html(self, articles):
         '''
-        Parse and structure article HTML elements
+        Parse and structure HTML elements from a list of article elements.
         '''
 
         if not articles:
-            raise Exception("The provided articles are invalid")
+            raise ValueError("No articles provided for parsing.")
 
         parsed_articles = []
         for article in articles:
-            try:
-                parsed_article = {}
+            parsed_article = self.extract_article_details(article)
 
-                # Make sure all the text is loaded by pressing see more
-                try:
-                    see_more_button = article.find_element(By.XPATH,
-                        '//div[@role="button" and contains(text(), "See more")]')
-
-                    if see_more_button:
-                        see_more_button.click()
-                except Exception as e:
-                    print(e)
-                    #pass # There is no see more in this post
-
-                ##### Fetch message
-                article_message = article.find_element(By.CSS_SELECTOR,
-                    'div[data-ad-comet-preview="message"]')                
-
-                parsed_article['text'] = article_message.text
-
-
-                #### Get all the images
-                try:
-                    # Get image container by following the sibling nearest to the
-                    # message article message parent
-                    image_container = (article_message.find_element(By.XPATH, '..')
-                        .find_element(By.XPATH, 'following-sibling::div'))
-                    article_image_containers = image_container.find_elements(By.CSS_SELECTOR, 'a')
-
-                    parsed_article['images'] = []
-                    for container in article_image_containers:
-                        try:
-                            image = container.find_element(By.CSS_SELECTOR, 'img')
-
-                            if image:
-                                image_url = image.get_attribute("src")
-                                if image_url:
-                                    parsed_article['images'].append(image_url)
-                        except Exception:
-                            continue # No image in this container
-
-                except Exception:
-                    pass # There are no images
-
-                # Add article to list
+            if parsed_article:
                 parsed_articles.append(parsed_article)
-            except Exception:
-                continue # Invalid article
 
         return parsed_articles
+
+    def extract_article_details(self, article):
+        '''Extracts details from a single article element.'''
+        parsed_article = {}
+        try:
+            # Attempt to expand hidden text if necessary
+            self.expand_hidden_text(article)
+
+            # Extract text content
+            parsed_article['text'] = self.extract_text(article)
+
+            # Extract images
+            parsed_article['images'] = self.extract_images(article)
+
+        except Exception as e:
+            print(f"Error parsing article: {e}")
+            return None  # Skip this article if any part fails to parse correctly
+
+        return parsed_article if parsed_article['text'] or parsed_article['images'] else None
+
+    def expand_hidden_text(self, article):
+        '''
+        Clicks 'See more' if they exist within an article.
+        '''
+        see_more_buttons = article.find_elements(By.XPATH,
+            './/div[@role="button" and contains(text(), "See more")]')
+
+        for button in see_more_buttons:
+            button.click()
+
+    def extract_text(self, article):
+        '''
+        Extracts text from the article.
+        '''
+
+        message_element = article.find_element(By.CSS_SELECTOR,
+            'div[data-ad-comet-preview="message"]')
+
+        return message_element.text if message_element else ""
+
+    def extract_images(self, article):
+        '''
+        Extracts all image URLs from the article.
+        '''
+
+        image_urls = []
+        image_element_containers = article.find_elements(By.CSS_SELECTOR, 'a')
+        for container in image_element_containers:
+            try:
+                image = container.find_element(By.CSS_SELECTOR, 'img')
+
+                if image:
+                    src = image.get_attribute("src")
+                    if src:
+                        image_urls.append(src)
+            except Exception:
+                continue # No image in this container
+
+        return image_urls
