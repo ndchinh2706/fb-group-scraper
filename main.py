@@ -4,7 +4,7 @@ Module where main logic is executed, everything since gathering the data
 to storing it to notifying the final user
 '''
 
-from database import db, Article, Image
+from database import db
 from notifier import Notifier
 from scraper import Scraper, ArticleParser
 
@@ -18,9 +18,6 @@ class Main:
         self.url = url
         self.ntfy_instance = ntfy_instance
         self.ntfy_token = ntfy_token
-
-        # Start db instance
-        self.service = db.get_session()
 
     def start(self):
         '''
@@ -44,8 +41,10 @@ class Main:
         for article in unsaved_articles:
             notifier.send_article_notification(article)
 
-        print(articles)
+        # Replace db articles with the new unsaved ones
+        db.replace_existing_articles(unsaved_articles)
 
+        print('Execution complete!')
 
 if __name__ == '__main__':
     URL = 'https://www.facebook.com/profile.php?id=100077086791019'

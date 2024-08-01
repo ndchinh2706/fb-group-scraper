@@ -19,25 +19,22 @@ class Notifier:
         Sends a notificatio through NTFY
         '''
 
+        # Set message priority, title and tags
+        headers = {
+            'Title': title,
+            'X-Priority': str(priority),
+            'Tags': 'warning'
+        }
+
         # Set auth headers if NTFY has token authentication
-        headers = {}
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
 
-        # Set message priority
-        headers['X-Priority'] = priority
-
-        # Set notification data
-        data = {
-            'title': title.encode(encoding='utf-8'),
-            'message': message.encode(encoding='utf-8'),
-        }
-
         # If there are images, add them
         if images and len(images) > 0:
-            data['attachments'] = ','.join(images)
+            headers['Attach'] = ','.join(images)
 
-        res = requests.post(self.instance_url, headers=headers, json=data, timeout=120)
+        res = requests.post(self.instance_url, headers=headers, data=message, timeout=120)
 
         res.raise_for_status()
 
@@ -51,8 +48,8 @@ class Notifier:
 
         # Check if any keyword is in the article text
         notification_priority = 3
-        if [keyword for keyword in keywords if keyword.lower() in article.text.lower()]:
+        if [keyword for keyword in keywords if keyword.lower() in article['text'].lower()]:
             notification_priority = 4
 
-        title = '⚠️ New post from PSP Setubal ⚠️'
-        self.send_notification(title, article.text, article.images, notification_priority)
+        title = 'New post from PSP Setubal!'
+        self.send_notification(title, article['text'], article['images'], notification_priority)

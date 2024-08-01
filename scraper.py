@@ -184,8 +184,6 @@ class ArticleParser:
             # Extract images
             parsed_article['images'] = self.extract_images(article)
 
-            time.sleep(15)
-
         except Exception as e:
             print(f"Error parsing article: {e}")
             return None  # Skip this article if any part fails to parse correctly

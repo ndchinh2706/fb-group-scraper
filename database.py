@@ -2,7 +2,7 @@
 Provides the database schema, handles entity creation and record management
 """
 
-from sqlalchemy import create_engine, Column, String, ForeignKey, Integer
+from sqlalchemy import create_engine, delete, Column, String, ForeignKey, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -57,14 +57,46 @@ class Database:
         if not articles or len(articles) < 1:
             return []
 
+        session = self.get_session()
+
         unread_articles = []
         for article in articles:
-            res = self.session().query(Article).filter_by(text=article.text).first()
+            res = session.query(Article).filter_by(text=article['text']).first()
 
             if not res:
                 unread_articles.append(article)
 
+        session.close()
         return unread_articles
 
+    def replace_existing_articles(self, articles):
+        """
+        Replaces the existing article records in the database
+        with the new ones
+        """
+
+        # Dont delete old data if there is no new one
+        if not articles or len(articles) < 1:
+            return
+
+        session = self.get_session()
+
+        # Remove old data
+        session.execute(delete(Article))
+        session.execute(delete(Image))
+
+        for article in articles:
+            # Add the new article
+            new_article = Article(text=article['text'])
+            session.add(new_article)
+            session.commit()
+
+            # Add article's images
+            for image in article['images']:
+                new_image = Image(src=image, article=new_article.id)
+                session.add(new_image)
+                session.commit()
+
+        session.close()
 
 db = Database()
