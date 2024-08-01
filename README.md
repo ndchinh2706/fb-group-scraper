@@ -5,11 +5,17 @@
 
 ## Introduction
 
-The Facebook Group Post Notifier is a Python application designed to monitor specific Facebook groups for new posts, parse them, and send notifications through NTFY. This tool is especially useful for staying updated with real-time information from Facebook groups without constantly checking the website or having to install the app.
+The Facebook Group Post Notifier is a Python application designed to monitor specific Facebook groups for new posts, parse them, and send notifications through NTFY.
+<br />
+<br />
+This tool is especially useful for staying updated with real-time information from Facebook groups without constantly checking the website or having to install the app.
 
 ## Project Inspiration
 
-This project was inspired by a personal experience where I received a speeding ticket due to a mobile speed camera set up by the local police. After discussing with an officer, I learned that such setups are often announced in the city's police Facebook group. To avoid future tickets and stay informed, I created this script to automatically notify me of new posts that might indicate the presence of mobile speed cameras.
+This project was inspired by a personal experience where I received a speeding ticket due to a mobile speed camera set up by the local police. After discussing with an officer, I learned that such setups are often announced in the city's police Facebook group. 
+<br />
+<br />
+To avoid future tickets and stay informed, I created this script to automatically notify me of new posts that might indicate the presence of mobile speed cameras.
 
 ## Requirements
 
@@ -21,8 +27,8 @@ This project was inspired by a personal experience where I received a speeding t
 Cloning the repository to your local machine.
 
 ```
-git clone [repository-url]
-cd [repository-directory]
+git clone https://github.com/RaulRohjans/fb-group-scraper
+cd fb-group-scraper
 ```
 
 ### Install Dependencies
