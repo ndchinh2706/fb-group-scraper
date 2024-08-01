@@ -2,6 +2,7 @@
 Provides the database schema, handles entity creation and record management
 """
 
+import os
 from sqlalchemy import create_engine, delete, Column, String, ForeignKey, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -32,7 +33,14 @@ class Database:
     Represents and manages the database engine connection
     """
 
-    def __init__(self, uri='sqlite:///data.db'):
+    def __init__(self, uri = None):
+        if uri is None:
+            # Ensure the directory exists
+            directory = "data"
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            uri = f"sqlite:///{directory}/data.db"
+
         self.engine = create_engine(uri)
         Base.metadata.create_all(self.engine)
         self.session = sessionmaker(bind=self.engine)

@@ -21,7 +21,7 @@ class Scraper:
         # Initialize chrome driver
         service = Service(GeckoDriverManager().install())
         options = webdriver.FirefoxOptions()
-        # options.add_argument('--headless')  # Run headless
+        options.add_argument('--headless')  # Run headless
 
         self.driver = webdriver.Firefox(service=service, options=options)
 
