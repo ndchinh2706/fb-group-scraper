@@ -1,0 +1,7 @@
+services:
+  scraper:
+    build: .
+    container_name: fb-group-scraper
+    command: ["--url", "https://www.facebook.com/yourgroup", "--ntfy-instance", "https://ntfy.example.com/your-topic", "--ntfy-token", "your_token"]
+    volumes:
+      - ./data:/app/data
