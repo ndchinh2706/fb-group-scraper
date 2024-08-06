@@ -10,9 +10,10 @@ class Notifier:
     Holds all the logic to send notifications
     '''
 
-    def __init__(self, ntfy_instance, token = None):
+    def __init__(self, ntfy_instance, token, keywords):
         self.instance_url = ntfy_instance
         self.token = token
+        self.keywords = keywords
 
     def send_notification(self, title, message, images, priority = 3):
         '''
@@ -44,12 +45,16 @@ class Notifier:
         for some keywords to decide the priority of the message
         '''
 
-        keywords = ['QUEM O AVISA', 'locais', 'controlo', 'velocidade', 'radar']
-
-        # Check if any keyword is in the article text
-        notification_priority = 3
-        if [keyword for keyword in keywords if keyword.lower() in article['text'].lower()]:
-            notification_priority = 4
-
+        # Check for the existance of keywordd
+        # if there are any, only send the notification if the post
+        # includes them (and use priority 5), otherwise always send with 3
         title = 'New post detected!'
-        self.send_notification(title, article['text'], article['images'], notification_priority)
+        if self.keywords:
+            parsed_keywords = str(self.keywords).split(";")
+
+            for keyword in parsed_keywords:
+                if keyword.lower().strip() in article['text'].lower().strip():
+                    self.send_notification(title, article['text'], article['images'], 5)
+                    return
+        else:
+            self.send_notification(title, article['text'], article['images'], 3)

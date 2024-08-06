@@ -15,10 +15,11 @@ class Logic:
     Main class that starts the program execution
     '''
 
-    def __init__(self, url, ntfy_instance, ntfy_token):
+    def __init__(self, url, ntfy_instance, ntfy_token, keywords):
         self.url = url
         self.ntfy_instance = ntfy_instance
         self.ntfy_token = ntfy_token
+        self.keywords = keywords
 
     def send_log(self, message):
         '''
@@ -57,7 +58,7 @@ class Logic:
         self.send_log('Sending notifications about the new posts')
 
         # Send article notifications
-        notifier = Notifier(self.ntfy_instance, self.ntfy_token)
+        notifier = Notifier(self.ntfy_instance, self.ntfy_token, self.keywords)
         for article in unsaved_articles:
             notifier.send_article_notification(article)
 
@@ -85,12 +86,15 @@ def main():
                         help='The NTFY instance URL to send notifications, with the topic included')
     parser.add_argument('--ntfy-token', type=str, required=True,
                         help='The authentication token for the NTFY service')
+    parser.add_argument('--keywords', type=str, required=False, default="",
+                        help='Only posts with at least one of the keywords will be sent ' +
+                        'for notification. Enter the keywords separated by semicolons ";" .')
 
     # Parse arguments
     args = parser.parse_args()
 
     # Initialize and start main application logic with the provided arguments
-    logic = Logic(args.url, args.ntfy_instance, args.ntfy_token)
+    logic = Logic(args.url, args.ntfy_instance, args.ntfy_token, args.keywords)
     logic.start()
 
 if __name__ == '__main__':
