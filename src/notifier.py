@@ -51,5 +51,5 @@ class Notifier:
         if [keyword for keyword in keywords if keyword.lower() in article['text'].lower()]:
             notification_priority = 4
 
-        title = 'New post from PSP Setubal!'
+        title = 'New post detected!'
         self.send_notification(title, article['text'], article['images'], notification_priority)
