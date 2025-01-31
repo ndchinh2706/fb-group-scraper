@@ -1,3 +1,7 @@
+# My fork's to-do list
+- [ ] Adding Facebook account login to monitor private Facebook groups.
+- [ ] Multiple groups monitoring.
+      
 # Facebook Group Post Notifier
 
 ![fb-group-scraper](https://github.com/user-attachments/assets/ff7c10ef-54ea-4885-a101-b2ec158a1265)
